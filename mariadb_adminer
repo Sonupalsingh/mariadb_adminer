@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Script to install and configure Apache, MariaDB, and Adminer
+
+# Update and install required packages
+echo "Updating system and installing Apache, PHP, and MariaDB..."
+sudo yum update -y
+sudo yum install httpd php php-mysqlnd mariadb-server mariadb wget -y
+
+# Start and enable Apache
+echo "Starting and enabling Apache..."
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+# Start and enable MariaDB
+echo "Starting and enabling MariaDB..."
+sudo systemctl start mariadb
+sudo systemctl enable mariadb
+
+# Secure MariaDB installation
+echo "Securing MariaDB installation..."
+sudo mysql_secure_installation
+
+# Download and configure Adminer
+echo "Downloading and configuring Adminer..."
+cd /var/www/html
+sudo wget https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php -O adminer.php
+sudo chown apache:apache /var/www/html/adminer.php
+sudo chmod 644 /var/www/html/adminer.php
+
+# Set SELinux permissions (if SELinux is enabled)
+echo "Setting SELinux permissions..."
+sudo chcon -t httpd_sys_rw_content_t /var/www/html/adminer.php
+
+# Restart Apache to apply changes
+echo "Restarting Apache..."
+sudo systemctl restart httpd
+
+# Temporarily disable SELinux enforcement (for testing purposes)
+echo "Disabling SELinux enforcement temporarily..."
+sudo setenforce 0
+
+echo "Installation and configuration completed successfully!"
