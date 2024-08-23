@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Script to set up MariaDB as a Master server
+
+# Install MariaDB
+echo "Installing MariaDB on the Master server..."
+sudo yum install mariadb* -y
+
+# Start and enable MariaDB service
+echo "Starting and enabling MariaDB service..."
+sudo systemctl start mariadb
+sudo systemctl enable mariadb
+
+# Secure MariaDB installation
+echo "Securing MariaDB installation..."
+sudo mysql_secure_installation
+
+# Configure MariaDB as Master
+echo "Configuring MariaDB as Master server..."
+sudo bash -c 'cat > /etc/my.cnf <<EOF
+[mysqld]
+bind-address=0.0.0.0
+server-id=1
+log_bin=mysql-bin
+binlog_do_db=sonu_db
+EOF'
+
+# Restart MariaDB to apply changes
+echo "Restarting MariaDB service..."
+sudo systemctl restart mariadb
+
+# Set up replication user
+echo "Setting up replication user..."
+sudo mysql -u root -p -e "
+CREATE USER 'root'@'%' IDENTIFIED BY 'Abcd@1234';
+GRANT REPLICATION SLAVE ON *.* TO 'root'@'%';
+FLUSH PRIVILEGES;
+"
+
+# Show Master status
+echo "Showing Master status..."
+sudo mysql -u root -p -e "SHOW MASTER STATUS;"
+
+echo "Master server setup completed!"
