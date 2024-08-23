@@ -1,0 +1,155 @@
+#!/bin/bash
+
+# Script to set up MariaDB as a Slave server
+
+# Install MariaDB
+echo "Installing MariaDB on the Slave server..."
+sudo yum install mariadb* -y
+
+# Start and enable MariaDB service
+echo "Starting and enabling MariaDB service..."
+sudo systemctl start mariadb
+sudo systemctl enable mariadb
+
+# Secure MariaDB installation
+echo "Securing MariaDB installation..."
+sudo mysql_secure_installation
+
+# Configure MariaDB as Slave
+echo "Configuring MariaDB as Slave server..."
+sudo bash -c 'cat > /etc/my.cnf <<EOF
+[mysqld]
+server-id=2
+relay-log=mysql-relay-bin
+log_bin=mysql-bin
+EOF'
+
+# Restart MariaDB to apply changes
+echo "Restarting MariaDB service..."
+sudo systemctl restart mariadb
+
+# Configure the Slave server to connect to the Master server
+echo "Setting up Slave to connect to Master..."
+sudo mysql -u root -p -e "
+CHANGE MASTER TO
+    MASTER_HOST='192.168.0.201',
+    MASTER_USER='root',
+    MASTER_PASSWORD='Abcd@1234',
+    MASTER_LOG_FILE='mysql-bin.000001',
+    MASTER_LOG_POS=767;
+START SLAVE;
+SHOW SLAVE STATUS\G;
+"
+
+echo "Slave server setup completed!"
+
+
+
+  #########################################################################################
+
+
+
+  master server
+
+yum install mariadb* -y
+systemctl start mariadb
+systemctl enable mariadb
+
+mysql_secure_installation
+
+
+sudo nano /etc/my.cnf
+
+[mysqld]
+bind-address=0.0.0.0
+server-id=1
+log_bin=mysql-bin
+binlog_do_db=sonu_db
+
+
+
+sudo systemctl restart mariadb
+
+
+
+sudo mysql -u root -p
+
+
+
+CREATE USER 'root'@'%' IDENTIFIED BY 'Abcd@1234';
+GRANT REPLICATION SLAVE ON *.* TO 'root'@'%';
+FLUSH PRIVILEGES;
+
+
+
+SHOW MASTER STATUS;
+
+
+
+
+Step 2: Configure the Replica Server
+
+yum install mariadb* -y
+systemctl start mariadb
+systemctl enable mariadb
+
+mysql_secure_installation
+
+sudo nano /etc/my.cnf
+
+
+
+[mysqld]
+server-id=2
+relay-log=mysql-relay-bin
+log_bin=mysql-bin
+
+
+
+
+sudo systemctl restart mariadb
+
+
+
+
+sudo mysql -u root -p
+
+
+
+
+CHANGE MASTER TO
+    MASTER_HOST='192.168.0.201',
+    MASTER_USER='root',
+    MASTER_PASSWORD='Abcd@1234',
+    MASTER_LOG_FILE='mysql-bin.000001',
+    MASTER_LOG_POS=767;
+
+
+
+
+
+START SLAVE;
+
+
+
+
+SHOW SLAVE STATUS\G;
+
+
+
+
+Step 3: Testing and Troubleshooting
+
+
+CREATE DATABASE sonu_db;
+USE sonu_db;
+CREATE TABLE test_table (id INT PRIMARY KEY, data VARCHAR(100));
+INSERT INTO test_table VALUES (1, 'Hello Replica');
+
+
+
+USE sonu_db;
+SELECT * FROM test_table;
+
+
+
